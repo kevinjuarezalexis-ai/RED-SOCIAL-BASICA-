@@ -253,28 +253,48 @@ const crearPublicacion = async (req, res) => {
 };
 
 const eliminarPublicacion = async (req, res) => {
+    const conn = await pool.getConnection();
     try {
         const { id } = req.params;
         const id_usuario = req.usuario.id;
         const isAdmin    = req.usuario.isAdmin;
 
-        let resultado;
-        if (isAdmin) {
-            [resultado] = await pool.query("DELETE FROM publicaciones WHERE id_publi = ?", [id]);
-        } else {
-            [resultado] = await pool.query(
-                "DELETE FROM publicaciones WHERE id_publi = ? AND id_usuario = ?",
-                [id, id_usuario]
-            );
+        await conn.beginTransaction();
+
+        // Verificar que el post existe y que el usuario tiene permiso antes de borrar
+        const [[publi]] = await conn.query(
+            "SELECT id_publi, id_usuario FROM publicaciones WHERE id_publi = ?",
+            [id]
+        );
+
+        if (!publi)
+            return res.status(404).json({ error: "La publicación no existe" });
+
+        if (!isAdmin && publi.id_usuario !== id_usuario) {
+            await conn.rollback();
+            return res.status(403).json({ error: "No tenés permiso para borrar esta publicación" });
         }
 
-        if (resultado.affectedRows === 0)
-            return res.status(403).json({ error: "No tenés permiso o el post no existe" });
+        // Borrar votos de los comentarios de esta publicación (FK sin CASCADE)
+        await conn.query(
+            "DELETE vc FROM votos_comentarios vc INNER JOIN comentarios c ON vc.id_coment = c.id_coment WHERE c.id_publi = ?",
+            [id]
+        );
 
+        // Borrar los comentarios de la publicación
+        await conn.query("DELETE FROM comentarios WHERE id_publi = ?", [id]);
+
+        // Borrar la publicación (votos_publicaciones ya tiene ON DELETE CASCADE)
+        await conn.query("DELETE FROM publicaciones WHERE id_publi = ?", [id]);
+
+        await conn.commit();
         res.json({ mensaje: "Publicación eliminada" });
     } catch (error) {
+        await conn.rollback();
         console.error("Error en eliminarPublicacion:", error);
         res.status(500).json({ error: "Error al borrar" });
+    } finally {
+        conn.release();
     }
 };
 

@@ -14,12 +14,12 @@ Rey Magi es una red social básica donde los usuarios pueden registrarse, inicia
 
 ## Tecnologías utilizadas
 
-- **Backend: Node.js + Express** — servidor web
-- **Base de datos: MySQL** — (administrada con phpMyAdmin / XAMPP)
-- **Autenticación: JWT (jsonwebtoken) bcryptjs** — Autenticacion de usuarios con JWT y hash de contraseñas
-- **Frontend: HTML + CSS + JavaScript** — frontend vanilla
+- **Backend:** Node.js + Express — servidor web
+- **Base de datos:** MySQL (administrada con phpMyAdmin / XAMPP)
+- **Autenticación:** JWT (jsonwebtoken) + bcryptjs — autenticación de usuarios y hash de contraseñas
+- **Frontend:** HTML + CSS + JavaScript vanilla
 
-> Nota: el TP solicita PostgreSQL, pero se utilizó MySQL por usar phpmyadmin ya que eso usamos en base de datos 2
+> Nota: el TP solicita PostgreSQL, pero se utilizó MySQL por usar phpMyAdmin ya que eso usamos en Base de Datos 2.
 
 ---
 
@@ -40,15 +40,12 @@ npm install mysql2
 npm install jsonwebtoken bcryptjs
 ```
 
-
-
 ### 3. Crear la base de datos
 
-Crear la base de datos
-Abrir XAMPP y darle Start a MySQL
-Ir a http://localhost/phpmyadmin
-Crear una base de datos llamada redsocial_db
-Seleccionarla, ir a la pestaña SQL, pegar el contenido de database.txt y ejecutar
+1. Abrir XAMPP y darle **Start** a MySQL
+2. Ir a `http://localhost/phpmyadmin`
+3. Crear una base de datos llamada `reymagi`
+4. Seleccionarla, ir a la pestaña **SQL**, pegar el contenido de `base de datos.txt` y ejecutar
 
 ### 4. Configurar variables de entorno
 
@@ -62,37 +59,25 @@ DB_NAME=reymagi
 DB_PORT=3306
 PORT=3000
 JWT_SECRET=tu_clave_secreta
-
 ```
+
 ### 5. Iniciar el servidor
 
+```bash
 # Modo desarrollo (reinicia automáticamente al guardar cambios)
 npm run dev
 
 # Modo producción
 npm start
+```
 
 La aplicación estará disponible en `http://localhost:3000`
-
-
-## Explicación de BD — Procedimiento, Trigger y Transacción
-
-### Stored Procedure — `registrar_publicacion`
-
-Procedimiento almacenado que recibe el `id_usuario` y el texto de la publicación. Antes de insertar, verifica que el usuario exista en la tabla `usuarios`. Si no existe, lanza un error con `SIGNAL SQLSTATE`. Si existe, realiza el `INSERT` y devuelve el ID de la nueva publicación. Es llamado desde el controller con `CALL registrar_publicacion(?, ?)` en lugar de hacer el INSERT directo desde Node.js.
-
-### Trigger — `after_delete_publicacion`
-
-Se dispara automáticamente después de cada `DELETE` en la tabla `publicaciones`. Inserta un registro en la tabla `log_eliminaciones` con el ID de la publicación borrada, el ID del usuario dueño y la fecha. No requiere ninguna llamada desde Node.js — MySQL lo ejecuta solo cada vez que se borra una publicación.
-
-### Transacción — `crearComentario`
-
-Al crear un comentario, se utiliza una transacción con `BEGIN`, `COMMIT` y `ROLLBACK`. La operación realiza dos queries de forma atómica: inserta el comentario en la tabla `comentarios` y actualiza el contador `total_comentarios` en la tabla `publicaciones`. Si cualquiera de los dos falla, se ejecuta `ROLLBACK` y ningún cambio queda guardado, manteniendo la consistencia de los datos.
 
 ---
 
 ## Estructura del proyecto
 
+```
 tp3-app/
 ├── server.js                       # Punto de entrada, configura Express y monta las rutas
 ├── .env                            # Variables de entorno (NO subir)
@@ -112,17 +97,17 @@ tp3-app/
 │   └── auth.js                     # Middlewares de verificación JWT
 └── public/
     ├── assert/
-    │   └── logoxd.png              # Logo facherito de la aplicacion xd
+    │   └── logoxd.png              # Logo facherito de la aplicación xd
     ├── index.html                  # Frontend (HTML5 semántico)
     ├── style.css                   # Estilos (CSS3)
     └── app.js                      # Lógica del frontend (JS Vanilla)
-
+```
 
 ---
 
 ## Endpoints de la API
 
-> ✅ Requiere token JWT en el header `Authorization: Bearer <token>`
+> ✅ Requiere token JWT en el header `Authorization: Bearer <token>`  
 > ❌ Público — no requiere autenticación
 
 ### 🔐 Autenticación `/api/auth`
@@ -178,6 +163,22 @@ tp3-app/
 | `GET` | `/api/usuarios/admin/lista` | Listar todos los usuarios | ✅ Admin |
 | `DELETE` | `/api/usuarios/admin/ban/:id` | Banear (eliminar) un usuario | ✅ Admin |
 | `PATCH` | `/api/usuarios/admin/toggle/:id` | Promover o degradar rol de admin | ✅ Admin |
+
+---
+
+## Explicación de BD — Procedimiento, Trigger y Transacción
+
+### Stored Procedure — `registrar_publicacion`
+
+Procedimiento almacenado que recibe el `id_usuario` y el texto de la publicación. Antes de insertar, verifica que el usuario exista en la tabla `usuarios`. Si no existe, lanza un error con `SIGNAL SQLSTATE`. Si existe, realiza el `INSERT` y devuelve el ID de la nueva publicación. Es llamado desde el controller con `CALL registrar_publicacion(?, ?)` en lugar de hacer el INSERT directo desde Node.js.
+
+### Trigger — `after_delete_publicacion`
+
+Se dispara automáticamente después de cada `DELETE` en la tabla `publicaciones`. Inserta un registro en la tabla `log_eliminaciones` con el ID de la publicación borrada, el ID del usuario dueño y la fecha. No requiere ninguna llamada desde Node.js — MySQL lo ejecuta solo cada vez que se borra una publicación.
+
+### Transacción — `crearComentario`
+
+Al crear un comentario, se utiliza una transacción con `BEGIN`, `COMMIT` y `ROLLBACK`. La operación realiza dos queries de forma atómica: inserta el comentario en la tabla `comentarios` y actualiza el contador `total_comentarios` en la tabla `publicaciones`. Si cualquiera de los dos falla, se ejecuta `ROLLBACK` y ningún cambio queda guardado, manteniendo la consistencia de los datos.
 
 ---
 

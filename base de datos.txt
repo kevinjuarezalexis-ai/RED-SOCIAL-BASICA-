@@ -111,3 +111,13 @@ BEGIN
 END$$
 
 DELIMITER ;
+
+
+
+
+-- UN USUARIO ADMIN Y NORMAL PARA AGREGAR A LA BASE DE DATOS
+
+INSERT INTO usuarios (id_usuario, nombre, correo, password_hash, fecha_registro, is_admin) VALUES
+(1, 'Rey Magi', 'admin@gmail.com', '$2b$10$hP.avVX1nLWsbu67kJSLu.D5yP20modoJAKQqjWNyzZX7Ho8eU506', '2026-05-04 10:00:00', 1),
+(2, 'Kevin Juarez', 'kevin@gmail.com', '$2b$10$hP.avVX1nLWsbu67kJSLu.D5yP20modoJAKQqjWNyzZX7Ho8eU506', '2026-05-04 10:00:00', 0),
+
