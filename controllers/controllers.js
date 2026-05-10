@@ -622,23 +622,80 @@ const listarUsuariosAdmin = async (req, res) => {
 
 // Banear (eliminar) un usuario — solo admin
 const banearUsuario = async (req, res) => {
+    if (!req.usuario || !req.usuario.isAdmin) {
+        return res.status(403).json({ error: "Acceso denegado: se requiere rol administrador" });
+    }
+    const conn = await pool.getConnection();
     try {
-        if (!req.usuario || !req.usuario.isAdmin) {
-            return res.status(403).json({ error: "Acceso denegado: se requiere rol administrador" });
-        }
         const { id } = req.params;
         if (parseInt(id) === req.usuario.id) {
             return res.status(400).json({ error: "No podés banearte a vos mismo" });
         }
-        const [resultado] = await pool.query(
-            "DELETE FROM usuarios WHERE id_usuario = ?", [id]
+
+        const [[usuarioExiste]] = await conn.query(
+            "SELECT id_usuario FROM usuarios WHERE id_usuario = ?", [id]
         );
-        if (resultado.affectedRows === 0)
+        if (!usuarioExiste) {
             return res.status(404).json({ error: "Usuario no encontrado" });
+        }
+
+        await conn.beginTransaction();
+
+        // 1. Votos del usuario en comentarios
+        await conn.query("DELETE FROM votos_comentarios WHERE id_usuario = ?", [id]);
+
+        // 2. Votos del usuario en publicaciones
+        await conn.query("DELETE FROM votos_publicaciones WHERE id_usuario = ?", [id]);
+
+        // 3. Votos de OTROS usuarios en comentarios de este usuario
+        await conn.query(
+            "DELETE vc FROM votos_comentarios vc INNER JOIN comentarios c ON vc.id_coment = c.id_coment WHERE c.id_usuario = ?",
+            [id]
+        );
+
+        // 4. Comentarios del usuario
+        await conn.query("DELETE FROM comentarios WHERE id_usuario = ?", [id]);
+
+        // 5. Votos de OTROS en comentarios de publicaciones de este usuario
+        await conn.query(
+            "DELETE vc FROM votos_comentarios vc INNER JOIN comentarios c ON vc.id_coment = c.id_coment INNER JOIN publicaciones p ON c.id_publi = p.id_publi WHERE p.id_usuario = ?",
+            [id]
+        );
+
+        // 6. Comentarios en publicaciones de este usuario (de otros usuarios)
+        await conn.query(
+            "DELETE c FROM comentarios c INNER JOIN publicaciones p ON c.id_publi = p.id_publi WHERE p.id_usuario = ?",
+            [id]
+        );
+
+        // 7. Votos de otros en publicaciones del usuario (votos_publicaciones tiene ON DELETE CASCADE pero lo borramos explícitamente)
+        await conn.query(
+            "DELETE vp FROM votos_publicaciones vp INNER JOIN publicaciones p ON vp.id_publi = p.id_publi WHERE p.id_usuario = ?",
+            [id]
+        );
+
+        // 8. Publicaciones del usuario
+        await conn.query("DELETE FROM publicaciones WHERE id_usuario = ?", [id]);
+
+        // 9. Relaciones de seguidores
+        await conn.query(
+            "DELETE FROM seguidores WHERE id_seguidor = ? OR id_seguido = ?", [id, id]
+        );
+
+        // 10. Log de eliminaciones que referencien al usuario
+        await conn.query("DELETE FROM log_eliminaciones WHERE id_usuario = ?", [id]);
+
+        // 11. Finalmente el usuario
+        await conn.query("DELETE FROM usuarios WHERE id_usuario = ?", [id]);
+
+        await conn.commit();
         res.json({ mensaje: "Usuario baneado correctamente" });
     } catch (error) {
+        await conn.rollback();
         console.error("Error en banearUsuario:", error);
         res.status(500).json({ error: "Error al banear usuario" });
+    } finally {
+        conn.release();
     }
 };
 

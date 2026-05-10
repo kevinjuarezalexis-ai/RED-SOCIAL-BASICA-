@@ -72,6 +72,13 @@ npm start
 ```
 
 La aplicación estará disponible en `http://localhost:3000`
+Podes agregar a esto 2 usuarios desde la base de datos el primero es admin y tendra
+un panel donde puedas borrar usuarios, publicaciones, dar o quitar admin.
+INSERT INTO usuarios (id_usuario, nombre, correo, password_hash, fecha_registro, is_admin) VALUES
+(1, 'Rey Magi', 'admin@gmail.com', '$2b$10$hP.avVX1nLWsbu67kJSLuD5yP20modoJAKQqjWNyzZX7Ho8eU506', '2026-05-04 10:00:00', 1),
+(2, 'Kevin Juarez', 'kevin@gmail.com', '$2b$10$hP.avVX1nLWsbu67kJSLuD5yP20modoJAKQqjWNyzZX7Ho8eU506', '2026-05-04 10:00:00', 0),
+
+
 
 ---
 
