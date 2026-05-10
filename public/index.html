@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>REY MAGI</title>
+    <link rel="stylesheet" href="style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@700;900&family=Raleway:wght@300;400;500;600&display=swap" rel="stylesheet">
+</head>
+<body>
+
+    <!-- HEADER -->
+    <header class="header">
+        <div class="header-left">
+            <div class="logo-circle">
+                <img src="assert/logoxd.png" alt="REY MAGI" class="logo-circle">
+                
+            </div>
+            <h1 class="brand-title">REY MAGI</h1>
+        </div>
+
+        <div class="header-center">
+            <div class="search-bar">
+                <svg class="search-icon" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+                </svg>
+                <input type="text" placeholder="Buscar publicaciones..." class="search-input" id="searchInput">
+                <button class="search-btn" onclick="handleSearch()">Buscar</button>
+            </div>
+        </div>
+
+        <div class="header-right">
+            <!-- Área de usuario logueado -->
+            <div class="header-user-area" id="headerUserArea" style="display:none;">
+                <div class="header-user-avatar" id="headerAvatar" title="Mi perfil" onclick="verMiPerfil()"></div>
+                <span class="header-username" id="headerUsername"></span>
+                <span class="admin-badge" id="headerAdminBadge" style="display:none;">Admin</span>
+            </div>
+
+            <div class="user-menu">
+                <button class="menu-btn" id="menuBtn" onclick="toggleDropdown()">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <circle cx="12" cy="8" r="4"/><path d="M20 21a8 8 0 1 0-16 0"/>
+                    </svg>
+                    Mi cuenta
+                    <svg class="chevron" xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                        <polyline points="6 9 12 15 18 9"/>
+                    </svg>
+                </button>
+
+                <div class="dropdown-menu" id="dropdownMenu">
+                    <!-- Sin sesión -->
+                    <div id="menuNoSesion">
+                        <button class="dropdown-item" onclick="showModal('login')">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/><polyline points="10 17 15 12 10 7"/><line x1="15" y1="12" x2="3" y2="12"/>
+                            </svg>
+                            Iniciar sesión
+                        </button>
+                        <button class="dropdown-item" onclick="showModal('register')">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="8.5" cy="7" r="4"/><line x1="20" y1="8" x2="20" y2="14"/><line x1="23" y1="11" x2="17" y2="11"/>
+                            </svg>
+                            Registrarse
+                        </button>
+                    </div>
+
+                    <!-- Con sesión -->
+                    <div id="menuConSesion" style="display:none;">
+                        <button class="dropdown-item" onclick="verMiPerfil(); closeDropdown();">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <circle cx="12" cy="8" r="4"/><path d="M20 21a8 8 0 1 0-16 0"/>
+                            </svg>
+                            Mi perfil
+                        </button>
+                        <button class="dropdown-item" onclick="verMisSeguidores(); closeDropdown();">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+                            </svg>
+                            Mis seguidores
+                        </button>
+                        <button class="dropdown-item" onclick="verMisSeguidos(); closeDropdown();">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5c-1.66 0-3 1.34-3 3s1.34 3 3 3z"/><path d="M8 11c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5C6.34 5 5 6.34 5 8s1.34 3 3 3z"/><path d="M8 13c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/><path d="M16 13c-.29 0-.62.02-.97.05 1.16.84 1.97 1.97 1.97 3.45V19h6v-2c0-2.66-5.33-4-7-4z"/>
+                            </svg>
+                            A quien sigo
+                        </button>
+                        <div class="dropdown-divider"></div>
+                        <button class="dropdown-item danger" onclick="cerrarSesion()">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/>
+                            </svg>
+                            Cerrar sesión
+                        </button>
+                        <button class="dropdown-item admin-item" id="menuAdminBtn" style="display:none;" onclick="abrirPanelAdmin()">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/>
+                            </svg>
+                            Panel Admin
+                        </button>
+                    </div>
+
+                    <div class="dropdown-divider"></div>
+                    <button class="dropdown-item" onclick="toggleDarkMode()">
+                        <svg id="darkModeIcon" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
+                        </svg>
+                        <span id="darkModeLabel">Modo oscuro</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- MAIN CONTENT -->
+    <main class="main-content">
+        <div class="feed-layout">
+
+            <!-- FORMULARIO NUEVA PUBLICACIÓN -->
+            <div class="new-post-card">
+                <div class="new-post-header">
+                    <div class="post-avatar own-avatar" id="newPostAvatar" style="user-select:none;">?</div>
+                    <span class="new-post-label">¿Qué querés compartir hoy?</span>
+                </div>
+                <textarea
+                    class="new-post-textarea"
+                    id="newPostContent"
+                    placeholder="Escribí tu publicación aquí..."
+                    rows="3"
+                ></textarea>
+                <div class="new-post-footer">
+                    <span class="char-counter" id="charCounter">0 / 500</span>
+                    <button class="publish-btn" id="publishBtn" onclick="crearPublicacion()">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                            <line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/>
+                        </svg>
+                        Publicar
+                    </button>
+                </div>
+            </div>
+
+            <!-- FEED -->
+            <div class="posts-container" id="postsContainer">
+                <div class="loading-state" id="loadingState">
+                    <div class="spinner"></div>
+                    <span>Cargando publicaciones...</span>
+                </div>
+                <div class="empty-state" id="emptyState" style="display:none;">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+                    </svg>
+                    <p>Aún no hay publicaciones.<br>¡Sé el primero en publicar!</p>
+                </div>
+            </div>
+
+        </div>
+    </main>
+
+    <!-- FOOTER -->
+    <footer class="footer">
+        <div class="footer-content">
+            <div class="footer-brand">
+                <img src="assert/logoxd.png" alt="REY MAGI" class="footer-logo">
+                <span class="footer-title">REY MAGI</span>
+            </div>
+            <p class="footer-copy">&copy; 2026 REY MAGI. Todos los derechos reservados.</p>
+        </div>
+    </footer>
+
+    <!-- ── MODAL LOGIN/REGISTER ──────────────────────────────── -->
+    <div class="modal-overlay" id="modalOverlay" onclick="closeModal()">
+        <div class="modal" id="modal" onclick="event.stopPropagation()">
+            <button class="modal-close" onclick="closeModal()">✕</button>
+            <div id="modal-content"></div>
+        </div>
+    </div>
+
+    <!-- ── MODAL CONFIRMAR ELIMINAR ──────────────────────────── -->
+    <div class="modal-overlay" id="deleteOverlay" onclick="closeDeleteModal()">
+        <div class="modal modal-small" onclick="event.stopPropagation()">
+            <div class="delete-confirm">
+                <svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#ef4444" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                    <polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4h6v2"/>
+                </svg>
+                <h3 id="deleteModalTitle">¿Eliminar?</h3>
+                <p>Esta acción no se puede deshacer.</p>
+                <div class="delete-actions">
+                    <button class="btn-cancel" onclick="closeDeleteModal()">Cancelar</button>
+                    <button class="btn-delete" id="confirmDeleteBtn">Eliminar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ── MODAL PERFIL ──────────────────────────────────────── -->
+    <div class="profile-overlay" id="profileOverlay" onclick="closeProfileModal()">
+        <div class="profile-modal" onclick="event.stopPropagation()">
+            <button class="profile-modal-close" onclick="closeProfileModal()">✕</button>
+            <div class="pm-avatar" id="pmAvatar"></div>
+            <div class="pm-name" id="pmName"></div>
+            <div class="pm-stats">
+                <div class="pm-stat" id="pmStatSeguidores" onclick="verListaDesdeModal('seguidores')">
+                    <span class="pm-stat-num" id="pmSeguidores">0</span>
+                    <span class="pm-stat-label">Seguidores</span>
+                </div>
+                <div class="pm-stat" id="pmStatSeguidos" onclick="verListaDesdeModal('seguidos')">
+                    <span class="pm-stat-num" id="pmSeguidos">0</span>
+                    <span class="pm-stat-label">Siguiendo</span>
+                </div>
+            </div>
+            <button class="follow-btn" id="followBtn" onclick="toggleSeguir()" style="display:none;"></button>
+        </div>
+    </div>
+
+    <!-- ── MODAL LISTA SEGUIDORES/SEGUIDOS ──────────────────── -->
+    <div class="list-overlay" id="listOverlay" onclick="closeListModal()">
+        <div class="list-modal" onclick="event.stopPropagation()">
+            <div class="list-modal-head">
+                <span id="listModalTitle">Seguidores</span>
+                <button onclick="closeListModal()">✕</button>
+            </div>
+            <div class="list-modal-body" id="listModalBody"></div>
+        </div>
+    </div>
+
+    <!-- ── PANEL ADMIN ───────────────────────────────────────── -->
+    <div class="admin-overlay" id="adminOverlay" onclick="cerrarPanelAdmin()">
+        <div class="admin-panel" onclick="event.stopPropagation()">
+            <div class="admin-panel-head">
+                <h2 class="admin-panel-title">⚙️ Panel de Administración</h2>
+                <button class="admin-panel-close" onclick="cerrarPanelAdmin()">✕</button>
+            </div>
+            <div class="admin-tabs">
+                <button class="admin-tab active" id="tabPubs" onclick="adminCambiarTab('pubs')">📋 Publicaciones</button>
+                <button class="admin-tab" id="tabUsers" onclick="adminCambiarTab('users')">👥 Usuarios</button>
+            </div>
+            <div class="admin-panel-body" id="adminContent">
+                <p style="padding:16px;opacity:.6">Cargando...</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- ── TOAST ─────────────────────────────────────────────── -->
+    <div class="toast" id="toast"></div>
+
+    <script src="app.js"></script>
+
+    <!-- Funciones auxiliares que el HTML necesita pero app.js no define -->
+    <script>
+        function handleSearch() {
+            const q = document.getElementById('searchInput').value.trim().toLowerCase();
+            const filtradas = state.publicaciones.filter(p =>
+                p.contenido.toLowerCase().includes(q) ||
+                (p.autor || '').toLowerCase().includes(q)
+            );
+            renderFeed(filtradas);
+        }
+
+        function toggleDarkMode() {
+            state.darkMode = !state.darkMode;
+            document.body.classList.toggle('dark-mode', state.darkMode);
+            document.getElementById('darkModeLabel').textContent =
+                state.darkMode ? 'Modo claro' : 'Modo oscuro';
+        }
+    </script>
+</body>
+</html>

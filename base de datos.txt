@@ -1,0 +1,113 @@
+CREATE DATABASE REYMAGI ;
+USE REYMAGI;
+
+CREATE TABLE usuarios (
+	id_usuario  INT AUTO_INCREMENT PRIMARY KEY,
+    nombre VARCHAR(50) not null, 
+    correo VARCHAR(50) not null UNIQUE,
+    password_hash VARCHAR(255) not null,
+    fecha_registro datetime DEFAULT CURRENT_TIMESTAMP,
+    is_admin tinyint(1)
+    );
+    
+CREATE TABLE publicaciones (
+    id_publi int AUTO_INCREMENT PRIMARY KEY,
+    id_usuario int not null,
+    texto varchar (450) not null,
+    me_gusta int default 0,
+    no_me_gusta int DEFAULT 0,
+    fecha_de_creacion datetime DEFAULT CURRENT_TIMESTAMP,
+    total_comentarios int default 0,
+    foreign key (id_usuario) references usuarios(id_usuario)
+    );
+    
+CREATE TABLE comentarios (
+    id_coment int AUTO_INCREMENT PRIMARY key,
+    id_usuario INT not null,
+    id_publi int not null,
+    texto varchar(200),
+    me_gusta int default 0,
+    no_me_gusta int DEFAULT 0,
+    fecha_de_creacion datetime DEFAULT CURRENT_TIMESTAMP,
+    foreign key (id_usuario) references usuarios(id_usuario),
+    foreign key (id_publi) references publicaciones(id_publi)
+    );
+    
+CREATE TABLE seguidores (
+        id_segui int AUTO_INCREMENT PRIMARY KEY,
+        id_seguidor int not null,
+        id_seguido int not null,
+        unique(id_seguidor, id_seguido),
+        foreign key (id_seguidor) references usuarios(id_usuario),
+        foreign key (id_seguido) references usuarios(id_usuario)
+        );
+
+CREATE TABLE IF NOT EXISTS votos_publicaciones (
+    id_usuario   INT NOT NULL,
+    id_publi     INT NOT NULL,
+    tipo         ENUM('like', 'dislike') NOT NULL,
+    created_at   TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    PRIMARY KEY (id_usuario, id_publi),
+    FOREIGN KEY (id_publi) REFERENCES publicaciones(id_publi) ON DELETE CASCADE
+);
+ 
+CREATE TABLE IF NOT EXISTS votos_comentarios (
+    id_usuario   INT NOT NULL,
+    id_coment    INT NOT NULL,
+    tipo         ENUM('like', 'dislike') NOT NULL,
+    created_at   TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    PRIMARY KEY (id_usuario, id_coment),
+    FOREIGN KEY (id_coment) REFERENCES comentarios(id_coment) ON DELETE CASCADE
+);
+
+CREATE TABLE log_eliminaciones (
+    id_log            INT AUTO_INCREMENT PRIMARY KEY,
+    id_publi          INT NOT NULL,
+    id_usuario        INT NOT NULL,
+    fecha_eliminacion DATETIME DEFAULT CURRENT_TIMESTAMP
+);
+
+
+-- STORED PROCEDURE 
+-- registra una publicacion viendo si el usuario existe
+
+DELIMITER $$
+
+CREATE PROCEDURE registrar_publicacion(
+    IN p_id_usuario INT,
+    IN p_texto      VARCHAR(450)
+)
+BEGIN
+    DECLARE usuario_existe INT;
+
+    SELECT COUNT(*) INTO usuario_existe
+    FROM usuarios
+    WHERE id_usuario = p_id_usuario;
+
+    IF usuario_existe = 0 THEN
+        SIGNAL SQLSTATE '45000'
+        SET MESSAGE_TEXT = 'El usuario no existe';
+    END IF;
+
+    INSERT INTO publicaciones (id_usuario, texto)
+    VALUES (p_id_usuario, p_texto);
+
+    SELECT LAST_INSERT_ID() AS id_publi;
+END$$
+
+DELIMITER ;
+
+-- TRIGGER 
+-- Se avtiva automaticamente cuando se borra una publicacion y inserta un registro en log_eliminaciones
+
+DELIMITER $$
+
+CREATE TRIGGER after_delete_publicacion
+AFTER DELETE ON publicaciones
+FOR EACH ROW
+BEGIN
+    INSERT INTO log_eliminaciones (id_publi, id_usuario)
+    VALUES (OLD.id_publi, OLD.id_usuario);
+END$$
+
+DELIMITER ;
