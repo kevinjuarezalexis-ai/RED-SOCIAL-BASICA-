@@ -14,13 +14,12 @@ Rey Magi es una red social básica donde los usuarios pueden registrarse, inicia
 
 ## Tecnologías utilizadas
 
-- **Node.js + Express** — servidor web
-- **MySQL** — base de datos relacional
-- **JWT (jsonwebtoken)** — autenticación
-- **bcryptjs** — hash de contraseñas
-- **HTML + CSS + JavaScript** — frontend vanilla
+- **Backend: Node.js + Express** — servidor web
+- **Base de datos: MySQL** — (administrada con phpMyAdmin / XAMPP)
+- **Autenticación: JWT (jsonwebtoken) bcryptjs** — Autenticacion de usuarios con JWT y hash de contraseñas
+- **Frontend: HTML + CSS + JavaScript** — frontend vanilla
 
-> Nota: el TP solicita PostgreSQL, pero se utilizó MySQL por disponibilidad del entorno. La lógica es equivalente y todos los requerimientos (stored procedure, trigger, transacción) están implementados.
+> Nota: el TP solicita PostgreSQL, pero se utilizó MySQL por usar phpmyadmin ya que eso usamos en base de datos 2
 
 ---
 
@@ -29,7 +28,7 @@ Rey Magi es una red social básica donde los usuarios pueden registrarse, inicia
 ### 1. Clonar el repositorio
 
 ```bash
-git clone https://github.com/tu-usuario/tu-repo.git
+git clone https://github.com/kevinjuarezalexis-ai/RED-SOCIAL-BASICA-.git
 cd tp3-app
 ```
 
@@ -37,9 +36,21 @@ cd tp3-app
 
 ```bash
 npm install
+npm install mysql2
+npm install jsonwebtoken bcryptjs
 ```
 
-### 3. Configurar variables de entorno
+
+
+### 3. Crear la base de datos
+
+Crear la base de datos
+Abrir XAMPP y darle Start a MySQL
+Ir a http://localhost/phpmyadmin
+Crear una base de datos llamada redsocial_db
+Seleccionarla, ir a la pestaña SQL, pegar el contenido de database.txt y ejecutar
+
+### 4. Configurar variables de entorno
 
 Crear un archivo `.env` en la raíz del proyecto con el siguiente contenido:
 
@@ -51,27 +62,18 @@ DB_NAME=reymagi
 DB_PORT=3306
 PORT=3000
 JWT_SECRET=tu_clave_secreta
+
 ```
-
-### 4. Crear la base de datos
-
-Importar el archivo `base de datos.txt` en MySQL:
-
-```bash
-mysql -u root -p reymagi < "base de datos.txt"
-```
-
-O abrirlo con MySQL Workbench y ejecutarlo manualmente.
-
 ### 5. Iniciar el servidor
 
-```bash
+# Modo desarrollo (reinicia automáticamente al guardar cambios)
+npm run dev
+
+# Modo producción
 npm start
-```
 
 La aplicación estará disponible en `http://localhost:3000`
 
----
 
 ## Explicación de BD — Procedimiento, Trigger y Transacción
 
@@ -86,6 +88,96 @@ Se dispara automáticamente después de cada `DELETE` en la tabla `publicaciones
 ### Transacción — `crearComentario`
 
 Al crear un comentario, se utiliza una transacción con `BEGIN`, `COMMIT` y `ROLLBACK`. La operación realiza dos queries de forma atómica: inserta el comentario en la tabla `comentarios` y actualiza el contador `total_comentarios` en la tabla `publicaciones`. Si cualquiera de los dos falla, se ejecuta `ROLLBACK` y ningún cambio queda guardado, manteniendo la consistencia de los datos.
+
+---
+
+## Estructura del proyecto
+
+tp3-app/
+├── server.js                       # Punto de entrada, configura Express y monta las rutas
+├── .env                            # Variables de entorno (NO subir)
+├── .env.example                    # Ejemplo de variables de entorno (sí subir)
+├── .gitignore                      # Archivos ignorados por Git
+├── base de datos.txt               # Script SQL completo (tablas, procedure, trigger)
+├── package.json                    # Dependencias y scripts del proyecto
+├── db/
+│   └── index.js                    # Pool de conexiones MySQL
+├── controllers/
+│   └── controllers.js              # Lógica de negocio de todos los endpoints
+├── routes/
+│   ├── auth.js                     # Rutas de autenticación
+│   ├── publicaciones.js            # Rutas de publicaciones y comentarios
+│   └── usuarios.js                 # Rutas de usuarios, seguidores y admin
+├── middleware/
+│   └── auth.js                     # Middlewares de verificación JWT
+└── public/
+    ├── assert/
+    │   └── logoxd.png              # Logo facherito de la aplicacion xd
+    ├── index.html                  # Frontend (HTML5 semántico)
+    ├── style.css                   # Estilos (CSS3)
+    └── app.js                      # Lógica del frontend (JS Vanilla)
+
+
+---
+
+## Endpoints de la API
+
+> ✅ Requiere token JWT en el header `Authorization: Bearer <token>`
+> ❌ Público — no requiere autenticación
+
+### 🔐 Autenticación `/api/auth`
+
+| Método | Endpoint | Descripción | Auth |
+|--------|----------|-------------|:----:|
+| `POST` | `/api/auth/register` | Registrar nuevo usuario | ❌ |
+| `POST` | `/api/auth/login` | Iniciar sesión y obtener token | ❌ |
+
+---
+
+### 📝 Publicaciones `/api/publicaciones`
+
+| Método | Endpoint | Descripción | Auth |
+|--------|----------|-------------|:----:|
+| `GET` | `/api/publicaciones` | Obtener todas las publicaciones | ❌ |
+| `GET` | `/api/publicaciones/:id` | Obtener una publicación por ID | ❌ |
+| `POST` | `/api/publicaciones` | Crear nueva publicación | ✅ |
+| `PUT` | `/api/publicaciones/:id` | Editar publicación propia | ✅ |
+| `DELETE` | `/api/publicaciones/:id` | Eliminar publicación propia o como admin | ✅ |
+| `POST` | `/api/publicaciones/:id/votar` | Like o Dislike en una publicación | ✅ |
+
+---
+
+### 💬 Comentarios `/api/publicaciones`
+
+| Método | Endpoint | Descripción | Auth |
+|--------|----------|-------------|:----:|
+| `GET` | `/api/publicaciones/:id/comentarios` | Obtener comentarios de una publicación | ❌ |
+| `POST` | `/api/publicaciones/:id/comentarios` | Agregar comentario | ✅ |
+| `DELETE` | `/api/publicaciones/comentarios/:id` | Eliminar comentario propio o como admin | ✅ |
+| `POST` | `/api/publicaciones/comentarios/:id/votar` | Like o Dislike en un comentario | ✅ |
+
+---
+
+### 👤 Usuarios `/api/usuarios`
+
+| Método | Endpoint | Descripción | Auth |
+|--------|----------|-------------|:----:|
+| `GET` | `/api/usuarios/:id/perfil` | Ver perfil de un usuario | ❌ |
+| `GET` | `/api/usuarios/:id/seguidores` | Ver lista de seguidores | ❌ |
+| `GET` | `/api/usuarios/:id/seguidos` | Ver lista de usuarios seguidos | ❌ |
+| `POST` | `/api/usuarios/:id/seguir` | Seguir a un usuario | ✅ |
+| `DELETE` | `/api/usuarios/:id/seguir` | Dejar de seguir a un usuario | ✅ |
+| `GET` | `/api/usuarios/mis-votos` | Obtener los votos del usuario logueado | ✅ |
+
+---
+
+### ⚙️ Admin `/api/usuarios/admin`
+
+| Método | Endpoint | Descripción | Auth |
+|--------|----------|-------------|:----:|
+| `GET` | `/api/usuarios/admin/lista` | Listar todos los usuarios | ✅ Admin |
+| `DELETE` | `/api/usuarios/admin/ban/:id` | Banear (eliminar) un usuario | ✅ Admin |
+| `PATCH` | `/api/usuarios/admin/toggle/:id` | Promover o degradar rol de admin | ✅ Admin |
 
 ---
 
