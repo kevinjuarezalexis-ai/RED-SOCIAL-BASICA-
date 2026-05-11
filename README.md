@@ -36,8 +36,6 @@ cd tp3-app
 
 ```bash
 npm install
-npm install mysql2
-npm install jsonwebtoken bcryptjs
 ```
 
 ### 3. Crear la base de datos
